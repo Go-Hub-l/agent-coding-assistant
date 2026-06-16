@@ -10,6 +10,10 @@ from rich.panel import Panel
 from agent_assistant.config import load_config
 from agent_assistant.llm.client import LLMClient
 from agent_assistant.orchestrator.intent import correct_intent, parse_intent
+from agent_assistant.pipeline.artifact import Artifact
+from agent_assistant.pipeline.pipeline import Pipeline
+from agent_assistant.pipeline.session import Session
+from agent_assistant.pipeline.stubs import StubPMAgent
 
 app = typer.Typer(
     name="agent-assist",
@@ -106,8 +110,31 @@ def build(
             console.print(f"[red]Error applying corrections:[/red] {e}")
 
     console.print()
-    console.print("[dim]Pipeline: PM → Architect → Coder → Reviewer → Tester[/dim]")
-    console.print("[dim]Pipeline execution not yet implemented — coming in Issue #3[/dim]")
+
+    # --- Pipeline Execution ---
+    def _on_stage_complete(artifact: Artifact) -> str | None:
+        console.print(f"  [green]✓[/green] [{artifact.stage}] {artifact.summary}")
+        return None
+
+    agents = [StubPMAgent()]
+    session = Session()
+    pipeline = Pipeline(
+        agents=agents,
+        config=config,
+        llm_client=llm,
+        session=session,
+        on_stage_complete=_on_stage_complete,
+    )
+
+    console.print("[bold]Running pipeline...[/bold]")
+    console.print("[dim]PM → Architect → Coder → Reviewer → Tester[/dim]")
+    console.print("[dim](Only PM is active — other agents coming in future issues)[/dim]")
+    console.print()
+
+    session = pipeline.run(intent)
+
+    console.print()
+    console.print(f"[bold green]Pipeline completed.[/bold green] Stages: {', '.join(session.completed_stages)}")
 
 
 @app.command()
