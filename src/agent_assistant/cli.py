@@ -5,8 +5,11 @@ from typing import Optional
 
 import typer
 from rich.console import Console
+from rich.panel import Panel
 
 from agent_assistant.config import load_config
+from agent_assistant.llm.client import LLMClient
+from agent_assistant.orchestrator.intent import correct_intent, parse_intent
 
 app = typer.Typer(
     name="agent-assist",
@@ -14,6 +17,21 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 console = Console()
+
+
+def _confirm_intent(intent) -> str | None:
+    """Display intent and ask user to confirm or correct. Returns corrections or None."""
+    console.print(Panel(intent.format_for_display(), title="Intent Document", border_style="blue"))
+    console.print()
+    console.print("[bold]Options:[/bold] [y]es confirm  |  [c]orrect  |  [a]bort")
+    choice = typer.prompt("Your choice", default="y")
+
+    if choice.lower() in ("y", "yes"):
+        return None
+    elif choice.lower() in ("c", "correct"):
+        return typer.prompt("Enter corrections")
+    else:
+        raise typer.Abort()
 
 
 @app.command()
@@ -64,8 +82,32 @@ def build(
         console.print("Intervention: [yellow]enabled[/yellow] (will pause at each stage)")
 
     console.print()
+
+    # --- Intent Specification ---
+    llm = LLMClient(config, model=config.models.orchestrator)
+
+    console.print("[dim]Parsing intent...[/dim]")
+    try:
+        intent = parse_intent(llm, request)
+    except Exception as e:
+        console.print(f"[red]Error parsing intent:[/red] {e}")
+        raise typer.Exit(code=2)
+
+    # Allow user to confirm or correct
+    while True:
+        corrections = _confirm_intent(intent)
+        if corrections is None:
+            console.print("[green]Intent confirmed.[/green]")
+            break
+        try:
+            intent = correct_intent(llm, intent, corrections)
+            console.print("[dim]Intent updated with corrections.[/dim]")
+        except Exception as e:
+            console.print(f"[red]Error applying corrections:[/red] {e}")
+
+    console.print()
     console.print("[dim]Pipeline: PM → Architect → Coder → Reviewer → Tester[/dim]")
-    console.print("[dim]Pipeline not yet implemented — coming in Issue #2+[/dim]")
+    console.print("[dim]Pipeline execution not yet implemented — coming in Issue #3[/dim]")
 
 
 @app.command()
