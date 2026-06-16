@@ -13,7 +13,7 @@ from agent_assistant.orchestrator.intent import correct_intent, parse_intent
 from agent_assistant.pipeline.artifact import Artifact
 from agent_assistant.pipeline.pipeline import Pipeline
 from agent_assistant.pipeline.session import Session
-from agent_assistant.pipeline.stubs import StubPMAgent
+from agent_assistant.agents.pm import PMAgent
 
 app = typer.Typer(
     name="agent-assist",
@@ -116,12 +116,13 @@ def build(
         console.print(f"  [green]✓[/green] [{artifact.stage}] {artifact.summary}")
         return None
 
-    agents = [StubPMAgent()]
+    pm_llm = LLMClient(config, model=config.models.pm)
+    agents = [PMAgent()]
     session = Session()
     pipeline = Pipeline(
         agents=agents,
         config=config,
-        llm_client=llm,
+        llm_client=pm_llm,
         session=session,
         on_stage_complete=_on_stage_complete,
     )
