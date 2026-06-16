@@ -92,3 +92,37 @@ class ListDirectoryTool(Tool):
 
     def _resolve_path(self, path: str) -> Path:
         return (self._working_dir / path).resolve()
+
+
+class RunTestTool(Tool):
+    """Run tests using a specified test framework command."""
+
+    def __init__(self, working_dir: Path):
+        self._working_dir = working_dir
+
+    @property
+    def name(self) -> str:
+        return "run_test"
+
+    @property
+    def description(self) -> str:
+        return "Run tests using a specified command (e.g., pytest, jest) within the project directory."
+
+    def execute(self, command: str = "python -m pytest", **kwargs: Any) -> dict[str, Any]:
+        """Run the test command and return stdout, stderr, and return code."""
+        import subprocess
+
+        result = subprocess.run(
+            command,
+            shell=True,
+            cwd=str(self._working_dir),
+            capture_output=True,
+            text=True,
+            timeout=kwargs.get("timeout", 120),
+        )
+        return {
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "return_code": result.returncode,
+            "success": result.returncode == 0,
+        }

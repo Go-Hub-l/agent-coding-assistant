@@ -99,12 +99,21 @@ class Pipeline:
         False if it needs escalation or hit a fundamental issue.
         """
         max_retries = self._config.max_feedback_retries
+        retry_verdicts = {"changes_requested", "failed"}
+        stop_verdicts = {"fundamental_issue"}
 
         for attempt in range(max_retries):
-            # Build feedback from the latest review issues
+            # Build feedback from the latest review artifact
             review_artifact = self._session.artifacts.get(reviewer.role.value)
-            issues = review_artifact.structured_data.get("issues", [])
-            feedback_text = json.dumps(issues, indent=2, ensure_ascii=False)
+            data = review_artifact.structured_data
+
+            # Extract appropriate feedback text based on reviewer type
+            if reviewer.role.value == "tester":
+                failures = data.get("results", {}).get("failures", [])
+                feedback_text = json.dumps(failures, indent=2, ensure_ascii=False) if failures else ""
+            else:
+                issues = data.get("issues", [])
+                feedback_text = json.dumps(issues, indent=2, ensure_ascii=False)
 
             self._session.record_feedback(
                 from_stage=reviewer.role.value,
@@ -130,9 +139,9 @@ class Pipeline:
 
             verdict = new_review_artifact.structured_data.get("verdict", "")
 
-            if verdict == "approved":
+            if verdict not in retry_verdicts and verdict not in stop_verdicts:
                 return True
-            elif verdict == "fundamental_issue":
+            elif verdict in stop_verdicts:
                 self._session.status = "fundamental_issue"
                 return False
 
@@ -174,12 +183,13 @@ class Pipeline:
             if stage in self._feedback_loops:
                 producer_stage = self._feedback_loops[stage]
                 verdict = artifact.structured_data.get("verdict", "")
+                retry_verdicts = {"changes_requested", "failed"}
 
                 if verdict == "fundamental_issue":
                     self._session.status = "fundamental_issue"
                     return self._session
 
-                if verdict == "changes_requested":
+                if verdict in retry_verdicts:
                     producer = self._find_agent(producer_stage)
                     if producer is not None:
                         resolved = self._run_feedback_loop(

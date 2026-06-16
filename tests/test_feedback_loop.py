@@ -258,3 +258,94 @@ def test_pipeline_without_feedback_loops_works_as_before():
 
     assert session.status == "completed"
     assert pm.execute.call_count == 1
+
+
+def test_tester_feedback_loop_retries_on_failure():
+    """When tester reports failures, coder re-runs with failure details."""
+    coder = MagicMock(spec=Agent)
+    coder.role = AgentRole.CODER
+    coder.name = "Coder"
+    coder.execute.return_value = Artifact(
+        stage="coder", summary="Code", structured_data={"files": [{"path": "a.py", "content": "x"}]},
+    )
+
+    tester = MagicMock(spec=Agent)
+    tester.role = AgentRole.TESTER
+    tester.name = "Tester"
+    tester.execute.side_effect = [
+        Artifact(stage="tester", summary="Tests failed",
+                 structured_data={
+                     "test_files": [{"path": "tests/test_a.py", "content": "test"}],
+                     "results": {"total": 2, "passed": 1, "failed": 1,
+                                 "failures": [{"test": "test_login", "error": "AssertionError"}]},
+                     "verdict": "failed",
+                 }),
+        Artifact(stage="tester", summary="Tests passed",
+                 structured_data={
+                     "test_files": [{"path": "tests/test_a.py", "content": "test"}],
+                     "results": {"total": 2, "passed": 2, "failed": 0, "failures": []},
+                     "verdict": "passed",
+                 }),
+    ]
+
+    intent = IntentDocument(feature="Test feature")
+    config = Config()
+    llm = MagicMock(spec=LLMClient)
+    session = Session()
+
+    pipeline = Pipeline(
+        agents=[coder, tester],
+        config=config,
+        llm_client=llm,
+        session=session,
+        feedback_loops=[("coder", "tester")],
+    )
+    pipeline.run(intent)
+
+    assert coder.execute.call_count == 2
+    assert tester.execute.call_count == 2
+    # Verify feedback was passed to the coder on retry
+    second_call_context = coder.execute.call_args_list[1][0][0]
+    assert second_call_context.feedback is not None
+
+
+def test_tester_feedback_loop_max_retries_escalates():
+    """Tester feedback loop escalates when max retries exhausted."""
+    coder = MagicMock(spec=Agent)
+    coder.role = AgentRole.CODER
+    coder.name = "Coder"
+    coder.execute.return_value = Artifact(
+        stage="coder", summary="Code", structured_data={"files": [{"path": "a.py", "content": "x"}]},
+    )
+
+    tester = MagicMock(spec=Agent)
+    tester.role = AgentRole.TESTER
+    tester.name = "Tester"
+    tester.execute.return_value = Artifact(
+        stage="tester", summary="Tests failed",
+        structured_data={
+            "test_files": [{"path": "tests/test_a.py", "content": "test"}],
+            "results": {"total": 2, "passed": 1, "failed": 1,
+                        "failures": [{"test": "test_login", "error": "AssertionError"}]},
+            "verdict": "failed",
+        },
+    )
+
+    intent = IntentDocument(feature="Test feature")
+    config = Config()
+    config.max_feedback_retries = 2
+    llm = MagicMock(spec=LLMClient)
+    session = Session()
+
+    pipeline = Pipeline(
+        agents=[coder, tester],
+        config=config,
+        llm_client=llm,
+        session=session,
+        feedback_loops=[("coder", "tester")],
+    )
+    pipeline.run(intent)
+
+    assert coder.execute.call_count == 3  # 1 initial + 2 retries
+    assert tester.execute.call_count == 3
+    assert session.status == "escalated"

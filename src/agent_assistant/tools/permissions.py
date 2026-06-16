@@ -25,6 +25,7 @@ TOOL_PERMISSIONS: dict[AgentRole, set[str]] = {
     AgentRole.TESTER: {
         "read_file",
         "list_directory",
+        "run_test",
     },
 }
 
