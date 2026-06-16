@@ -55,3 +55,15 @@ def test_help_shows_usage():
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
     assert "agent-assist" in result.output.lower() or "Usage" in result.output
+
+
+def test_help_mentions_intervene_options():
+    """CLI build --help shows intervention options."""
+    result = runner.invoke(app, ["build", "--help"])
+    assert "intervene" in result.output.lower()
+
+
+def test_help_mentions_exit_codes():
+    """CLI build --help mentions exit codes."""
+    result = runner.invoke(app, ["build", "--help"])
+    assert "Exit codes" in result.output or "exit" in result.output.lower()
