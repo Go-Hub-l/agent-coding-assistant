@@ -34,7 +34,7 @@ def _make_mock_llm(responses):
     """Create a mock LLM that returns responses in sequence."""
     llm = MagicMock(spec=LLMClient)
     llm.chat.side_effect = [
-        ChatResponse(content=r, model="deepseek-chat", usage={}) for r in responses
+        ChatResponse(content=r, model="deepseek-v4-pro", usage={}) for r in responses
     ]
     return llm
 

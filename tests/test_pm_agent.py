@@ -46,7 +46,7 @@ SAMPLE_LLM_RESPONSE = json.dumps({
 def _make_context(feature: str = "User login", **kwargs) -> AgentContext:
     llm = MagicMock(spec=LLMClient)
     llm.chat.return_value = ChatResponse(
-        content=SAMPLE_LLM_RESPONSE, model="deepseek-chat", usage={}
+        content=SAMPLE_LLM_RESPONSE, model="deepseek-v4-pro", usage={}
     )
     return AgentContext(
         intent=IntentDocument(feature=feature, **kwargs),
@@ -130,7 +130,7 @@ def test_pm_agent_handles_markdown_fences():
     ctx = _make_context()
     ctx.llm_client.chat.return_value = ChatResponse(
         content=f"```json\n{SAMPLE_LLM_RESPONSE}\n```",
-        model="deepseek-chat",
+        model="deepseek-v4-pro",
         usage={},
     )
     art = agent.execute(ctx)
@@ -143,7 +143,7 @@ def test_pm_agent_invalid_json_raises():
     ctx = _make_context()
     ctx.llm_client.chat.return_value = ChatResponse(
         content="This is not JSON",
-        model="deepseek-chat",
+        model="deepseek-v4-pro",
         usage={},
     )
     with pytest.raises(json.JSONDecodeError):

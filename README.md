@@ -59,13 +59,13 @@ DEEPSEEK_API_KEY=sk-xxx
 # 可选：API 地址（默认 https://api.deepseek.com）
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 
-# 可选：为每个 Agent 单独指定模型（默认 deepseek-chat）
-ORCHESTRATOR_MODEL=deepseek-chat
-PM_MODEL=deepseek-chat
-ARCHITECT_MODEL=deepseek-chat
-CODER_MODEL=deepseek-chat
-REVIEWER_MODEL=deepseek-chat
-TESTER_MODEL=deepseek-chat
+# 可选：为每个 Agent 单独指定模型（默认 deepseek-v4-pro）
+ORCHESTRATOR_MODEL=deepseek-v4-pro
+PM_MODEL=deepseek-v4-pro
+ARCHITECT_MODEL=deepseek-v4-pro
+CODER_MODEL=deepseek-v4-pro
+REVIEWER_MODEL=deepseek-v4-pro
+TESTER_MODEL=deepseek-v4-pro
 
 # 可选：反馈循环最大重试次数（默认 3）
 MAX_FEEDBACK_RETRIES=3

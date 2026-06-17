@@ -67,3 +67,92 @@ def test_help_mentions_exit_codes():
     """CLI build --help mentions exit codes."""
     result = runner.invoke(app, ["build", "--help"])
     assert "Exit codes" in result.output or "exit" in result.output.lower()
+
+
+def test_help_mentions_output_dir():
+    """CLI build --help shows output-dir option."""
+    result = runner.invoke(app, ["build", "--help"])
+    assert "output-dir" in result.output.lower() or "output" in result.output.lower()
+
+
+# --- _write_artifact_files tests ---
+
+from pathlib import Path
+
+from agent_assistant.cli import _write_artifact_files
+from agent_assistant.pipeline.artifact import Artifact
+from agent_assistant.pipeline.session import Session
+
+
+def test_write_coder_files(tmp_path):
+    """_write_artifact_files writes Coder artifact files to disk."""
+    session = Session()
+    session.record_artifact(Artifact(
+        stage="coder", summary="Code",
+        structured_data={"files": [
+            {"path": "src/main.py", "content": "print('hello')", "description": "Main entry"},
+            {"path": "src/utils.py", "content": "def helper(): pass", "description": "Utils"},
+        ]},
+    ))
+
+    written = _write_artifact_files(session, tmp_path / "out")
+    assert len(written) == 2
+    assert (tmp_path / "out" / "src" / "main.py").read_text() == "print('hello')"
+    assert (tmp_path / "out" / "src" / "utils.py").read_text() == "def helper(): pass"
+
+
+def test_write_tester_files(tmp_path):
+    """_write_artifact_files writes Tester artifact test_files to disk."""
+    session = Session()
+    session.record_artifact(Artifact(
+        stage="tester", summary="Tests",
+        structured_data={"test_files": [
+            {"path": "tests/test_main.py", "content": "def test_ok(): assert True", "description": "Test"},
+        ], "results": {}, "verdict": "passed"},
+    ))
+
+    written = _write_artifact_files(session, tmp_path / "out")
+    assert len(written) == 1
+    assert (tmp_path / "out" / "tests" / "test_main.py").read_text() == "def test_ok(): assert True"
+
+
+def test_write_both_coder_and_tester(tmp_path):
+    """_write_artifact_files writes files from both Coder and Tester artifacts."""
+    session = Session()
+    session.record_artifact(Artifact(
+        stage="coder", summary="Code",
+        structured_data={"files": [
+            {"path": "app.py", "content": "x = 1", "description": "App"},
+        ]},
+    ))
+    session.record_artifact(Artifact(
+        stage="tester", summary="Tests",
+        structured_data={"test_files": [
+            {"path": "test_app.py", "content": "def test(): pass", "description": "Test"},
+        ], "results": {}},
+    ))
+
+    written = _write_artifact_files(session, tmp_path / "out")
+    assert len(written) == 2
+
+
+def test_write_no_artifacts(tmp_path):
+    """_write_artifact_files returns empty list when no coder/tester artifacts."""
+    session = Session()
+    written = _write_artifact_files(session, tmp_path / "out")
+    assert written == []
+
+
+def test_write_creates_nested_dirs(tmp_path):
+    """_write_artifact_files creates parent directories automatically."""
+    session = Session()
+    session.record_artifact(Artifact(
+        stage="coder", summary="Code",
+        structured_data={"files": [
+            {"path": "deep/nested/path/module.py", "content": "# deep", "description": "Deep"},
+        ]},
+    ))
+
+    written = _write_artifact_files(session, tmp_path / "out")
+    assert len(written) == 1
+    assert (tmp_path / "out" / "deep" / "nested" / "path" / "module.py").read_text() == "# deep"

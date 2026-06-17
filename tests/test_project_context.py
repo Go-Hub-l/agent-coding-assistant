@@ -130,7 +130,7 @@ def test_summarizer_produces_summary(sample_project):
 
     mock_llm = MagicMock(spec=LLMClient)
     mock_llm.chat.return_value = ChatResponse(
-        content=SAMPLE_SUMMARY_RESPONSE, model="deepseek-chat", usage={}
+        content=SAMPLE_SUMMARY_RESPONSE, model="deepseek-v4-pro", usage={}
     )
 
     summarizer = ProjectSummarizer(mock_llm)
@@ -147,7 +147,7 @@ def test_summarizer_handles_markdown_fences():
     mock_llm = MagicMock(spec=LLMClient)
     mock_llm.chat.return_value = ChatResponse(
         content=f"```json\n{SAMPLE_SUMMARY_RESPONSE}\n```",
-        model="deepseek-chat",
+        model="deepseek-v4-pro",
         usage={},
     )
     scan = ScanResult(
@@ -163,7 +163,7 @@ def test_summarizer_invalid_json_raises():
     """Summarizer raises on invalid JSON from LLM."""
     mock_llm = MagicMock(spec=LLMClient)
     mock_llm.chat.return_value = ChatResponse(
-        content="Not JSON", model="deepseek-chat", usage={}
+        content="Not JSON", model="deepseek-v4-pro", usage={}
     )
     scan = ScanResult(
         root_dir="/test", file_tree=[], dependencies={},

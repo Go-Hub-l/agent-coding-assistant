@@ -19,7 +19,7 @@ def test_llm_client_init(config):
     client = LLMClient(config)
     assert client._base_url == "https://api.deepseek.com"
     assert client._api_key == "test-key"
-    assert client._model == "deepseek-chat"
+    assert client._model == "deepseek-v4-pro"
 
 
 def test_llm_client_custom_model(config):
@@ -36,7 +36,7 @@ def test_llm_client_chat_success(config):
     mock_response.status_code = 200
     mock_response.json.return_value = {
         "choices": [{"message": {"content": "Hello!"}}],
-        "model": "deepseek-chat",
+        "model": "deepseek-v4-pro",
         "usage": {"total_tokens": 10},
     }
     mock_response.raise_for_status = MagicMock()
@@ -56,7 +56,7 @@ def test_llm_client_chat_success(config):
 
     assert isinstance(result, ChatResponse)
     assert result.content == "Hello!"
-    assert result.model == "deepseek-chat"
+    assert result.model == "deepseek-v4-pro"
     assert result.usage == {"total_tokens": 10}
 
 

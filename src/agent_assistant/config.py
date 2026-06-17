@@ -11,12 +11,12 @@ from dotenv import load_dotenv
 class AgentModelConfig:
     """Per-agent model configuration."""
 
-    orchestrator: str = "deepseek-chat"
-    pm: str = "deepseek-chat"
-    architect: str = "deepseek-chat"
-    coder: str = "deepseek-chat"
-    reviewer: str = "deepseek-chat"
-    tester: str = "deepseek-chat"
+    orchestrator: str = "deepseek-v4-pro"
+    pm: str = "deepseek-v4-pro"
+    architect: str = "deepseek-v4-pro"
+    coder: str = "deepseek-v4-pro"
+    reviewer: str = "deepseek-v4-pro"
+    tester: str = "deepseek-v4-pro"
 
 
 @dataclass
@@ -40,12 +40,12 @@ def load_config(env_path: Path | None = None) -> Config:
         api_key=os.getenv("DEEPSEEK_API_KEY", ""),
         base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
         models=AgentModelConfig(
-            orchestrator=os.getenv("ORCHESTRATOR_MODEL", "deepseek-chat"),
-            pm=os.getenv("PM_MODEL", "deepseek-chat"),
-            architect=os.getenv("ARCHITECT_MODEL", "deepseek-chat"),
-            coder=os.getenv("CODER_MODEL", "deepseek-chat"),
-            reviewer=os.getenv("REVIEWER_MODEL", "deepseek-chat"),
-            tester=os.getenv("TESTER_MODEL", "deepseek-chat"),
+            orchestrator=os.getenv("ORCHESTRATOR_MODEL", "deepseek-v4-pro"),
+            pm=os.getenv("PM_MODEL", "deepseek-v4-pro"),
+            architect=os.getenv("ARCHITECT_MODEL", "deepseek-v4-pro"),
+            coder=os.getenv("CODER_MODEL", "deepseek-v4-pro"),
+            reviewer=os.getenv("REVIEWER_MODEL", "deepseek-v4-pro"),
+            tester=os.getenv("TESTER_MODEL", "deepseek-v4-pro"),
         ),
         max_feedback_retries=int(os.getenv("MAX_FEEDBACK_RETRIES", "3")),
     )

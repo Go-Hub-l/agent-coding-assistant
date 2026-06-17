@@ -31,7 +31,7 @@ def test_load_config_defaults():
     config = load_config(env_path=Path("/nonexistent/.env"))
     assert config.base_url == "https://api.deepseek.com"
     assert config.max_feedback_retries == 3
-    assert config.models.orchestrator == "deepseek-chat"
+    assert config.models.orchestrator == "deepseek-v4-pro"
 
 
 def test_load_config_from_env_vars(monkeypatch):
@@ -61,10 +61,10 @@ def test_load_config_from_dotenv(tmp_path):
 
 
 def test_per_agent_model_defaults():
-    """All agent models default to deepseek-chat."""
+    """All agent models default to deepseek-v4-pro."""
     config = load_config(env_path=Path("/nonexistent/.env"))
-    assert config.models.pm == "deepseek-chat"
-    assert config.models.architect == "deepseek-chat"
-    assert config.models.coder == "deepseek-chat"
-    assert config.models.reviewer == "deepseek-chat"
-    assert config.models.tester == "deepseek-chat"
+    assert config.models.pm == "deepseek-v4-pro"
+    assert config.models.architect == "deepseek-v4-pro"
+    assert config.models.coder == "deepseek-v4-pro"
+    assert config.models.reviewer == "deepseek-v4-pro"
+    assert config.models.tester == "deepseek-v4-pro"

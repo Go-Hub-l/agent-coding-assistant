@@ -32,7 +32,7 @@ SAMPLE_RESPONSE = json.dumps({
 
 def _make_context_with_pm() -> AgentContext:
     llm = MagicMock(spec=LLMClient)
-    llm.chat.return_value = ChatResponse(content=SAMPLE_RESPONSE, model="deepseek-chat", usage={})
+    llm.chat.return_value = ChatResponse(content=SAMPLE_RESPONSE, model="deepseek-v4-pro", usage={})
     return AgentContext(
         intent=IntentDocument(feature="User auth"),
         config=Config(),

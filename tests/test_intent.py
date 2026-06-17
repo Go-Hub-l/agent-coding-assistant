@@ -101,7 +101,7 @@ def test_parse_intent_success():
     mock_llm = MagicMock(spec=LLMClient)
     mock_llm.chat.return_value = ChatResponse(
         content='{"feature": "User login", "constraints": ["JWT"], "target_modules": ["auth"], "assumptions": ["DB exists"]}',
-        model="deepseek-chat",
+        model="deepseek-v4-pro",
         usage={},
     )
 
@@ -122,7 +122,7 @@ def test_parse_intent_with_markdown_fences():
     mock_llm = MagicMock(spec=LLMClient)
     mock_llm.chat.return_value = ChatResponse(
         content='```json\n{"feature": "Test", "constraints": [], "target_modules": [], "assumptions": []}\n```',
-        model="deepseek-chat",
+        model="deepseek-v4-pro",
         usage={},
     )
 
@@ -135,7 +135,7 @@ def test_parse_intent_invalid_json_raises():
     mock_llm = MagicMock(spec=LLMClient)
     mock_llm.chat.return_value = ChatResponse(
         content="This is not JSON at all",
-        model="deepseek-chat",
+        model="deepseek-v4-pro",
         usage={},
     )
 
@@ -151,7 +151,7 @@ def test_correct_intent_success():
     mock_llm = MagicMock(spec=LLMClient)
     mock_llm.chat.return_value = ChatResponse(
         content='{"feature": "User login with OAuth", "constraints": ["JWT", "OAuth2"], "target_modules": ["auth"], "assumptions": []}',
-        model="deepseek-chat",
+        model="deepseek-v4-pro",
         usage={},
     )
 
